@@ -3,8 +3,10 @@ from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 
-from .security import groupfinder    
 from .models import RootFactory
+from .security import groupfinder
+# enlloc del mòdul clàssic de seguretat farem servir el groupfinder de LDAP
+#from pyramid_ldap import groupfinder
 
 import ldap
 import os
@@ -29,19 +31,20 @@ def main(global_config, **settings):
     # setup LDAP server
     config.include("pyramid_ldap")
     config.ldap_setup('ldap://enric.tk',
-                bind = 'CN=admin,DC=enric,DC=tk',
-                passwd = 'enricus123'
+                bind="",passwd="", # anonymous bind
+#                bind = 'CN=admin,DC=enric,DC=tk',
+#                passwd = 'tralala'
             )
     config.ldap_set_login_query(
-                base_dn = "dc=enric,dc=tk",
+                base_dn = "ou=usuaris,dc=enric,dc=tk",
                 filter_tmpl = "(uid=%(login)s)",
                 scope = ldap.SCOPE_ONELEVEL,
             )
     config.ldap_set_groups_query(
-                base_dn='DC=enric,DC=tk',
-                filter_tmpl='(&(objectCategory=group)(member=%(userdn)s))',
+                base_dn='ou=grups,dc=enric,dc=tk',
+                filter_tmpl='(&(objectClass=groupOfNames)(member=%(userdn)s))',
                 scope = ldap.SCOPE_SUBTREE,
-            cache_period = 600,
+ #           cache_period = 600,
     )
  
     config.set_authentication_policy(authn_policy)
